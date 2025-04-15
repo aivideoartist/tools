@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-[#0b1120] text-white">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image Resizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-2xl bg-[#1e293b] p-6 rounded-2xl shadow-lg">
+    <h1 class="text-3xl font-bold text-center text-blue-400 mb-6">🔧 Image Resizer</h1>
+
+    <!-- Upload Area -->
+    <div id="drop-area" class="border-2 border-dashed border-blue-500 p-6 rounded-lg text-center cursor-pointer hover:bg-[#334155] transition">
+      <input type="file" id="fileInput" accept="image/*" class="hidden" />
+      <p class="text-white">📁 Drag & drop an image here or <span class="text-blue-400 underline">click to upload</span></p>
+    </div>
+
+    <!-- Image Preview -->
+    <div id="preview-container" class="mt-6 hidden">
+      <img id="preview-image" src="" alt="Preview" class="max-w-full max-h-64 mx-auto rounded shadow mb-4" />
+      <div class="grid grid-cols-2 gap-4">
+        <input type="number" id="widthInput" class="p-2 rounded bg-[#0f172a] text-white" placeholder="Width (px)" />
+        <input type="number" id="heightInput" class="p-2 rounded bg-[#0f172a] text-white" placeholder="Height (px)" />
+      </div>
+      <button id="resizeBtn" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl font-semibold">Resize & Download</button>
+    </div>
+  </div>
+
+  <script>
+    const dropArea = document.getElementById("drop-area");
+    const fileInput = document.getElementById("fileInput");
+    const previewContainer = document.getElementById("preview-container");
+    const previewImage = document.getElementById("preview-image");
+    const widthInput = document.getElementById("widthInput");
+    const heightInput = document.getElementById("heightInput");
+    const resizeBtn = document.getElementById("resizeBtn");
+
+    // Click to open file input
+    dropArea.addEventListener("click", () => fileInput.click());
+
+    // Handle drag-and-drop
+    dropArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropArea.classList.add("bg-[#1e293b]");
+    });
+
+    dropArea.addEventListener("dragleave", () => {
+      dropArea.classList.remove("bg-[#1e293b]");
+    });
+
+    dropArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropArea.classList.remove("bg-[#1e293b]");
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    });
+
+    // On file input change
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      handleFile(file);
+    });
+
+    function handleFile(file) {
+      if (!file || !file.type.startsWith("image/")) {
+        alert("Please upload a valid image file.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        previewImage.src = reader.result;
+        previewImage.onload = () => {
+          widthInput.value = previewImage.naturalWidth;
+          heightInput.value = previewImage.naturalHeight;
+          previewContainer.classList.remove("hidden");
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+
+    resizeBtn.addEventListener("click", () => {
+      const width = parseInt(widthInput.value);
+      const height = parseInt(heightInput.value);
+
+      if (!width || !height) {
+        alert("Please enter valid width and height.");
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, width, height);
+        const link = document.createElement("a");
+        link.download = "resized-image.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      };
+      img.src = previewImage.src;
+    });
+  </script>
+</body>
+</html>
